@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 2: Deployment Pipeline Proficiency</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Karla:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06090f;
+    --bg-card: #0d1321;
+    --bg-nav: #0a0f1a;
+    --accent: #8b5cf6;
+    --accent-dim: #4c1d95;
+    --accent-glow: rgba(139,92,246,0.12);
+    --text: #e8ecf4;
+    --text-dim: #7a8ba8;
+    --text-muted: #3d4f6a;
+    --green: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --blue: #3b82f6;
+    --teal: #14b8a6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Karla', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .nav-sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--bg-nav);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    padding: 24px 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .nav-logo {
+    padding: 0 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 16px;
+  }
+
+  .nav-logo .phase-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .nav-logo .phase-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .nav-chapter {
+    padding: 10px 24px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    font-weight: 500;
+  }
+
+  .nav-chapter:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .nav-chapter.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
+
+  .slide-counter {
+    position: fixed;
+    top: 24px; right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    z-index: 100;
+    background: rgba(6,9,15,0.8);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+  }
+
+  .slide-counter .current { color: var(--accent); font-weight: 700; }
+
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 260px; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.03);
+    z-index: 100;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #c4b5fd);
+    transition: width 0.4s ease;
+  }
+
+  .stage {
+    position: fixed;
+    left: 260px; top: 0; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+  .slide-inner {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-inner.left-align { align-items: flex-start; text-align: left; }
+
+  h1 { font-family: 'Sora', sans-serif; font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 24px; }
+  h2 { font-family: 'Sora', sans-serif; font-size: 44px; font-weight: 700; line-height: 1.15; letter-spacing: -1px; margin-bottom: 20px; }
+  h3 { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 600; line-height: 1.3; margin-bottom: 16px; }
+
+  .subtitle { font-size: 22px; color: var(--text-dim); line-height: 1.5; max-width: 700px; font-weight: 300; }
+  .accent { color: var(--accent); }
+  .green { color: var(--green); }
+  .danger { color: var(--danger); }
+  .warning { color: var(--warning); }
+  .blue { color: var(--blue); }
+  .teal { color: var(--teal); }
+  .dim { color: var(--text-dim); }
+  .muted { color: var(--text-muted); }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .big-number {
+    font-family: 'Sora', sans-serif;
+    font-size: 140px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -5px;
+  }
+
+  .big-emoji { font-size: 80px; margin-bottom: 20px; display: block; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .flow-row { display: flex; align-items: center; gap: 16px; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
+  .flow-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 24px 28px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .flow-box.highlight { border-color: var(--accent); background: var(--accent-glow); }
+  .flow-box .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .flow-box .label { font-weight: 600; font-size: 15px; }
+  .flow-box .detail { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .flow-arrow { font-size: 24px; color: var(--accent); flex-shrink: 0; }
+
+  .card-grid { display: grid; gap: 16px; margin: 24px 0; width: 100%; }
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: left;
+  }
+
+  .card .card-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .card .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 8px; }
+  .card .card-desc { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  .pipeline-stages { display: flex; gap: 0; align-items: stretch; margin: 32px 0; justify-content: center; }
+
+  .pipeline-stage {
+    padding: 32px 36px;
+    border-radius: 16px;
+    text-align: center;
+    min-width: 190px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-stage .stage-icon { font-size: 36px; margin-bottom: 10px; display: block; }
+  .pipeline-stage .stage-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 20px; }
+  .pipeline-stage .stage-detail { font-size: 13px; margin-top: 6px; opacity: 0.7; }
+  .pipeline-stage .stage-extra { font-size: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
+
+  .pipeline-stage.dev { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+  .pipeline-stage.test { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #c4b5fd; }
+  .pipeline-stage.prod { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #a7f3d0; }
+
+  .pipeline-arrow { font-size: 28px; color: var(--text-muted); padding: 0 8px; display: flex; align-items: center; }
+
+  .indicator-row { display: flex; gap: 24px; margin: 20px 0; justify-content: center; flex-wrap: wrap; }
+
+  .indicator {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 20px;
+  }
+
+  .indicator .dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .indicator .ind-label { font-size: 14px; font-weight: 500; }
+
+  .analogy {
+    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08));
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    text-align: left;
+    margin: 20px 0;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .analogy .analogy-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .analogy .analogy-text { font-size: 18px; line-height: 1.6; color: var(--text); }
+
+  .env-table {
+    width: 100%;
+    max-width: 850px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+  }
+
+  .env-table th {
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim);
+  }
+
+  .env-table td {
+    font-size: 15px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .env-table tr:last-child td { border-bottom: none; }
+
+  .checklist { text-align: left; max-width: 600px; margin: 20px auto; }
+  .checklist-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0; font-size: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .checklist-item .check { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+  .loop-visual {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 32px 0;
+    justify-content: center;
+    position: relative;
+  }
+
+  .loop-step {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px 24px;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .loop-step .step-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .loop-step .step-label { font-weight: 600; font-size: 14px; }
+
+  .loop-connector {
+    width: 40px;
+    height: 2px;
+    background: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 100;
+  }
+
+  .nav-hint kbd {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-logo">
+    <span class="phase-tag">Phase 2</span>
+    <span class="phase-title">Deployment Pipeline<br>Proficiency</span>
+  </div>
+  <div class="nav-chapter" data-chapter="intro">Welcome</div>
+  <div class="nav-chapter" data-chapter="mechanics">Pipeline Mechanics</div>
+  <div class="nav-chapter" data-chapter="comparing">Comparing Stages</div>
+  <div class="nav-chapter" data-chapter="rules">Deployment Rules</div>
+  <div class="nav-chapter" data-chapter="rollback">History & Rollback</div>
+  <div class="nav-chapter" data-chapter="design">Designing for Deployment</div>
+  <div class="nav-chapter" data-chapter="testing">Testing & Feedback</div>
+  <div class="nav-chapter" data-chapter="production">Production Considerations</div>
+  <div class="nav-chapter" data-chapter="habits">Phase 2 Habits</div>
+</nav>
+
+<div class="slide-counter"><span class="current">1</span> / <span class="total">18</span></div>
+<div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+<div class="nav-hint"><kbd>←</kbd> <kbd>→</kbd> to navigate</div>
+
+<div class="stage">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide active" data-chapter="intro">
+    <div class="slide-inner">
+      <span class="tag">Git & CI/CD Training</span>
+      <h1>Phase <span class="accent">2</span></h1>
+      <h2 style="font-weight:300; font-size:36px; color:var(--text-dim);">Deployment Pipeline Proficiency</h2>
+      <p class="subtitle" style="margin-top:16px;">Understanding the full journey from Dev to Production</p>
+      <div style="position:absolute;right:-20px;bottom:-40px;font-family:'Sora';font-size:240px;font-weight:800;color:var(--accent);opacity:0.04;line-height:1;">2</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Recap -->
+  <div class="slide" data-chapter="intro">
+    <div class="slide-inner">
+      <span class="tag">Phase 1 recap</span>
+      <h2>You've mastered the basics</h2>
+      <div class="flow-row" style="margin-top:24px;">
+        <div class="flow-box"><span class="icon">📸</span><span class="label green">Committing</span></div>
+        <div class="flow-box"><span class="icon">🔄</span><span class="label green">Syncing</span></div>
+        <div class="flow-box"><span class="icon">📝</span><span class="label green">Messages</span></div>
+      </div>
+      <p class="subtitle" style="margin-top:32px;">Now let's learn where your commits <em>go</em> after Development.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Pipeline overview -->
+  <div class="slide" data-chapter="mechanics">
+    <div class="slide-inner">
+      <span class="tag">The big picture</span>
+      <h2>Three stages, one pipeline</h2>
+      <div class="pipeline-stages">
+        <div class="pipeline-stage dev">
+          <span class="stage-icon">🔧</span>
+          <span class="stage-name">Development</span>
+          <span class="stage-detail">Your workspace</span>
+          <span class="stage-extra">Build, test ideas,<br>commit to Git</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage test">
+          <span class="stage-icon">🧪</span>
+          <span class="stage-name">Test</span>
+          <span class="stage-detail">Validation</span>
+          <span class="stage-extra">Business users verify,<br>real-ish data</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage prod">
+          <span class="stage-icon">🚀</span>
+          <span class="stage-name">Production</span>
+          <span class="stage-detail">Live</span>
+          <span class="stage-extra">End users,<br>real data</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:15px; margin-top:16px;">Deploying = copying workspace items from one stage to the next.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: What deploy means -->
+  <div class="slide" data-chapter="mechanics">
+    <div class="slide-inner">
+      <span class="tag">What "deploy" actually means</span>
+      <h2>Copying, not moving</h2>
+      <div class="card-grid cols-3" style="margin-top:16px;">
+        <div class="card">
+          <span class="card-icon">📋</span>
+          <div class="card-title">Items are copied</div>
+          <div class="card-desc">Reports, models, pipelines get duplicated to the next stage.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔗</span>
+          <div class="card-title">Items are paired</div>
+          <div class="card-desc">Sales Report in Dev is linked to Sales Report in Test. Updates flow through this pairing.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">⚙️</span>
+          <div class="card-title">Connections adapt</div>
+          <div class="card-desc">The same model can point to different data sources in each environment.</div>
+        </div>
+      </div>
+      <div class="analogy" style="margin-top:16px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Like promoting a recipe from your test kitchen to the main restaurant — the recipe is the same, but it now uses the restaurant's ingredients and equipment.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Comparing stages -->
+  <div class="slide" data-chapter="comparing">
+    <div class="slide-inner">
+      <span class="tag">Comparing stages</span>
+      <h2>Status indicators</h2>
+      <p class="subtitle" style="margin-bottom:24px;">The pipeline UI shows you exactly what's different between environments.</p>
+      <div class="indicator-row">
+        <div class="indicator">
+          <div class="dot" style="background:var(--green);"></div>
+          <span class="ind-label"><span class="green">Same as source</span> — No difference identified</span>
+        </div>
+        <div class="indicator">
+          <div class="dot" style="background:var(--warning);"></div>
+          <span class="ind-label"><span class="warning">Different from source</span> — A change was detected in one of the paired items</span>
+        </div>
+      </div>
+      <div class="indicator-row">
+        <div class="indicator">
+          <div class="dot" style="background:var(--accent);"></div>
+          <span class="ind-label"><span class="accent">Only in source</span> — New item in source stage, doesn't exist in target yet</span>
+        </div>
+        <div class="indicator">
+          <div class="dot" style="background:var(--text-dim);"></div>
+          <span class="ind-label"><span class="dim">Not in source</span> — Exists in target only, not impacted by deployment</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Selective deployment -->
+  <div class="slide" data-chapter="comparing">
+    <div class="slide-inner">
+      <span class="tag">Selective deployment</span>
+      <h2>Deploy <span class="accent">what you choose</span></h2>
+      <p class="subtitle">You don't have to deploy everything at once. Pick the specific items that are ready.</p>
+      <div class="card-grid cols-2" style="max-width:700px; margin-top:24px;">
+        <div class="card" style="border-color: rgba(16,185,129,0.3);">
+          <div class="card-title green">✅ Deploy these</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            📊 Sales Model (updated)<br>
+            📈 Revenue Report (updated)
+          </div>
+        </div>
+        <div class="card" style="border-color: rgba(255,255,255,0.08);">
+          <div class="card-title dim">⏸️ Not yet</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            📈 Experimental Dashboard (WIP)<br>
+            📁 New Pipeline (untested)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Deployment rules -->
+  <div class="slide" data-chapter="rules">
+    <div class="slide-inner">
+      <span class="tag">Deployment rules</span>
+      <h2>Same model, <span class="accent">different connections</span></h2>
+      <p class="subtitle" style="margin-bottom:24px;">Deployment rules automatically swap environment-specific settings.</p>
+      <table class="env-table">
+        <thead>
+          <tr><th>Setting</th><th style="color:#93c5fd;">🔧 Dev</th><th style="color:#c4b5fd;">🧪 Test</th><th style="color:#a7f3d0;">🚀 Prod</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Server</td><td style="color:#93c5fd;">dev-sql.company.com</td><td style="color:#c4b5fd;">test-sql.company.com</td><td style="color:#a7f3d0;">prod-sql.company.com</td></tr>
+          <tr><td>Database</td><td style="color:#93c5fd;">SalesDB_Dev</td><td style="color:#c4b5fd;">SalesDB_Test</td><td style="color:#a7f3d0;">SalesDB_Prod</td></tr>
+          <tr><td>Data</td><td style="color:#93c5fd;">Sample data</td><td style="color:#c4b5fd;">Copy of prod</td><td style="color:#a7f3d0;">Real data</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px; color:var(--text-muted);">The model logic is identical — only the connection changes per environment.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Parameters -->
+  <div class="slide" data-chapter="rules">
+    <div class="slide-inner">
+      <span class="tag">Parameters</span>
+      <h2>Use parameters <span class="accent">and variable sets</span>,<br>not <span class="danger">hardcoded values</span></h2>
+      <div class="card-grid cols-2" style="max-width:750px; margin-top:20px;">
+        <div class="card" style="border-color:var(--danger);">
+          <div class="card-title danger">❌ Hardcoded</div>
+          <div style="font-family:'JetBrains Mono'; font-size:14px; color:var(--text-dim); margin-top:12px; padding:12px; background:rgba(239,68,68,0.08); border-radius:6px;">
+            Server = "prod-sql.company.com"
+          </div>
+          <div class="card-desc" style="margin-top:12px;">Breaks when deployed. Requires manual fix every time.</div>
+        </div>
+        <div class="card" style="border-color:var(--green);">
+          <div class="card-title green">✅ Parameterized</div>
+          <div style="font-family:'JetBrains Mono'; font-size:14px; color:var(--text-dim); margin-top:12px; padding:12px; background:rgba(16,185,129,0.08); border-radius:6px;">
+            Server = Parameters.ServerName
+          </div>
+          <div class="card-desc" style="margin-top:12px;">Deployment rules swap the value automatically per stage.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Deployment history -->
+  <div class="slide" data-chapter="rollback">
+    <div class="slide-inner">
+      <span class="tag">Deployment history</span>
+      <span class="big-emoji">⏪</span>
+      <h2>Every deployment is recorded</h2>
+      <p class="subtitle">You can see who deployed what, when, and to which stage.</p>
+      <div class="card-grid cols-3" style="max-width:850px; margin-top:24px;">
+        <div class="card">
+          <span class="card-icon">👤</span>
+          <div class="card-title">Who</div>
+          <div class="card-desc">Which user triggered the deployment</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📦</span>
+          <div class="card-title">What</div>
+          <div class="card-desc">Which items were included</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🕐</span>
+          <div class="card-title">When</div>
+          <div class="card-desc">Timestamp and stage</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Rollback -->
+  <div class="slide" data-chapter="rollback">
+    <div class="slide-inner">
+      <span class="tag">When things go wrong</span>
+      <h2>Recovery options</h2>
+      <div class="card-grid cols-2" style="max-width:800px; margin-top:20px;">
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Redeploy from Dev</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.6;">Fix the issue in Dev, then deploy the corrected version forward through the pipeline again.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">⏮️</span>
+          <div class="card-title">Reverse deploy</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.6;">In some cases, deploy backward — copy the working Production version back to Test while you investigate.</div>
+        </div>
+      </div>
+      <div class="analogy" style="margin-top:20px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Like having a receipt for every package you've shipped. If something arrives damaged, you know exactly what was in the box and can send a replacement.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: Designing for deployment -->
+  <div class="slide" data-chapter="design">
+    <div class="slide-inner">
+      <span class="tag">Environment-aware development</span>
+      <h2>Build with deployment <span class="accent">in mind</span></h2>
+      <div class="checklist" style="max-width:700px;">
+        <div class="checklist-item"><span class="check">⚙️</span><span>Use <strong class="accent">parameters and variable sets</strong> for server names, database names, file paths</span></div>
+        <div class="checklist-item"><span class="check">🔗</span><span>Avoid hardcoded <strong>connection strings</strong> — they won't transfer</span></div>
+        <div class="checklist-item"><span class="check">📋</span><span>Know which settings are <strong>environment-specific</strong> vs. universal</span></div>
+        <div class="checklist-item"><span class="check">🧪</span><span>Test in Dev as if it were going to Prod — <strong>because it is</strong></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: The feedback loop -->
+  <div class="slide" data-chapter="testing">
+    <div class="slide-inner">
+      <span class="tag">The feedback loop</span>
+      <h2>Test → Fix → Redeploy</h2>
+      <div class="loop-visual">
+        <div class="loop-step" style="border-color: rgba(59,130,246,0.3);">
+          <span class="step-icon">🔧</span>
+          <span class="step-label blue">Build in Dev</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-step" style="border-color: rgba(139,92,246,0.3);">
+          <span class="step-icon">🚀</span>
+          <span class="step-label accent">Deploy to Test</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-step" style="border-color: rgba(245,158,11,0.3);">
+          <span class="step-icon">🔍</span>
+          <span class="step-label warning">Validate</span>
+        </div>
+        <div class="loop-connector"></div>
+        <div class="loop-step" style="border-color: rgba(239,68,68,0.3);">
+          <span class="step-icon">🐛</span>
+          <span class="step-label danger">Issue found?</span>
+        </div>
+      </div>
+      <div class="card-grid cols-2" style="max-width:600px; margin-top:8px;">
+        <div class="card" style="text-align:center; padding:16px; border-color: rgba(16,185,129,0.3);">
+          <div class="card-title green">No issues → Deploy to Prod ✅</div>
+        </div>
+        <div class="card" style="text-align:center; padding:16px; border-color: rgba(239,68,68,0.3);">
+          <div class="card-title danger">Issue found → Fix in Dev, redeploy 🔄</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: Testing responsibilities -->
+  <div class="slide" data-chapter="testing">
+    <div class="slide-inner">
+      <span class="tag">Who tests what?</span>
+      <h2>Testing responsibilities</h2>
+      <div class="card-grid cols-2" style="max-width:800px; margin-top:20px;">
+        <div class="card">
+          <span class="card-icon">👨‍💻</span>
+          <div class="card-title">You (BI Engineer)</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.8;">
+            Verify calculations are correct<br>
+            Check filters and slicers work<br>
+            Confirm cross-filter behavior<br>
+            Test with different data scenarios
+          </div>
+        </div>
+        <div class="card">
+          <span class="card-icon">👥</span>
+          <div class="card-title">Business Users</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.8;">
+            Validate numbers match expectations<br>
+            Confirm the report answers their questions<br>
+            Check formatting and usability<br>
+            Sign off before Production
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: Production considerations -->
+  <div class="slide" data-chapter="production">
+    <div class="slide-inner">
+      <span class="tag">Production awareness</span>
+      <span class="big-emoji">🚀</span>
+      <h2>Production is <span class="green">live</span></h2>
+      <p class="subtitle">Real users, real data, real consequences.</p>
+      <div class="card-grid cols-3" style="margin-top:24px;">
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Refresh Schedules</div>
+          <div class="card-desc">Production has its own schedules. Deployments don't affect them, but verify after changes.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📊</span>
+          <div class="card-title">Existing Content</div>
+          <div class="card-desc">Users may have bookmarks, dashboards, or alerts connected. Breaking changes have ripple effects.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📢</span>
+          <div class="card-title">Communication</div>
+          <div class="card-desc">Notify end users about changes. What's new? What moved? What looks different?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: Common deployment scenarios -->
+  <div class="slide" data-chapter="production">
+    <div class="slide-inner">
+      <span class="tag">Common scenarios</span>
+      <h2>What happens when you deploy…</h2>
+      <div class="card-grid cols-2" style="max-width:850px; margin-top:16px;">
+        <div class="card">
+          <div class="card-title">🆕 New report</div>
+          <div class="card-desc" style="font-size:15px;">Exists in Dev but not in Test yet. Deployment creates it in Test as a new item and establishes the pairing.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 Updated model</div>
+          <div class="card-desc" style="font-size:15px;">Already exists in both. Deployment updates the paired item in Test with your changes from Dev.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚠️ Deleted item</div>
+          <div class="card-desc" style="font-size:15px;">If you remove something from Dev, it won't auto-delete in Test. Orphaned items need manual cleanup.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">👤 User-created content</div>
+          <div class="card-desc" style="font-size:15px;">Reports created directly in Test/Prod (not deployed) remain untouched by the pipeline.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 16: Readiness checklist -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Before you deploy</span>
+      <h2>Is my feature <span class="accent">ready</span>?</h2>
+      <div class="checklist" style="max-width:650px;">
+        <div class="checklist-item"><span class="check">✅</span><span>All changes committed to Git with clear messages</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Parameters used (no hardcoded connections)</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Tested in Dev workspace thoroughly</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Release Manager notified it's ready</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Business users aware testing will be needed</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 17: Journey map -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">The complete journey</span>
+      <h2>From idea to production</h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box"><span class="icon">💡</span><span class="label">Idea</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><span class="icon">🔧</span><span class="label">Build in Dev</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><span class="icon">📸</span><span class="label">Commit</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><span class="icon">📢</span><span class="label">Signal Ready</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><span class="icon">🧪</span><span class="label">Test</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight"><span class="icon">🚀</span><span class="label">Prod</span></div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px;">You can now trace the path your work takes from development to the hands of end users.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 18: Phase 2 Goal -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Phase 2 Goal</span>
+      <h2>Explain the deployment path<br>for <span class="accent">any</span> change you make</h2>
+      <p class="subtitle" style="margin-top:16px;">
+        If someone asks <em>"how does this report get to production?"</em><br>
+        you should be able to walk them through every step.
+      </p>
+      <p style="color:var(--text-dim); font-size:15px; margin-top:40px;">
+        Next up: <strong>Phase 3</strong> — Branching & collaborative development 🌿
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const chapters = document.querySelectorAll('.nav-chapter');
+  const counter = document.querySelector('.slide-counter .current');
+  const total = document.querySelector('.slide-counter .total');
+  const progressFill = document.querySelector('.progress-fill');
+  let currentSlide = 0;
+  total.textContent = slides.length;
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    counter.textContent = currentSlide + 1;
+    progressFill.style.width = ((currentSlide + 1) / slides.length * 100) + '%';
+    const activeChapter = slides[currentSlide].dataset.chapter;
+    chapters.forEach(c => c.classList.toggle('active', c.dataset.chapter === activeChapter));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goTo(currentSlide + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(currentSlide - 1); }
+  });
+
+  chapters.forEach(ch => {
+    ch.addEventListener('click', () => {
+      const target = ch.dataset.chapter;
+      for (let i = 0; i < slides.length; i++) {
+        if (slides[i].dataset.chapter === target) { goTo(i); return; }
+      }
+    });
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>

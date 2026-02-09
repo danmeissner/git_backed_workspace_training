@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 1: Foundation — GIT Backed Power BI Workspaces</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Karla:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06090f;
+    --bg-card: #0d1321;
+    --bg-nav: #0a0f1a;
+    --accent: #10b981;
+    --accent-dim: #065f46;
+    --accent-glow: rgba(16,185,129,0.15);
+    --text: #e8ecf4;
+    --text-dim: #7a8ba8;
+    --text-muted: #3d4f6a;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Karla', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* NAV SIDEBAR */
+  .nav-sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--bg-nav);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    padding: 24px 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .nav-logo {
+    padding: 0 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 16px;
+  }
+
+  .nav-logo .phase-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .nav-logo .phase-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .nav-chapter {
+    padding: 10px 24px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    font-weight: 500;
+  }
+
+  .nav-chapter:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .nav-chapter.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* SLIDE COUNTER */
+  .slide-counter {
+    position: fixed;
+    top: 24px; right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    z-index: 100;
+    background: rgba(6,9,15,0.8);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+  }
+
+  .slide-counter .current { color: var(--accent); font-weight: 700; }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 260px; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.03);
+    z-index: 100;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #34d399);
+    transition: width 0.4s ease;
+  }
+
+  /* MAIN STAGE */
+  .stage {
+    position: fixed;
+    left: 260px; top: 0; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .slide-inner {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-inner.left-align {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* TYPOGRAPHY */
+  h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 24px;
+  }
+
+  h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    font-size: 22px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 700px;
+    font-weight: 300;
+  }
+
+  .accent { color: var(--accent); }
+  .danger { color: var(--danger); }
+  .warning { color: var(--warning); }
+  .blue { color: var(--blue); }
+  .purple { color: var(--purple); }
+  .dim { color: var(--text-dim); }
+  .muted { color: var(--text-muted); }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .big-number {
+    font-family: 'Sora', sans-serif;
+    font-size: 140px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -5px;
+  }
+
+  .big-emoji {
+    font-size: 80px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* VISUAL COMPONENTS */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .flow-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 24px 28px;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .flow-box.highlight {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .flow-box .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .flow-box .label { font-weight: 600; font-size: 15px; }
+  .flow-box .detail { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  .flow-arrow {
+    font-size: 24px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 16px;
+    margin: 24px 0;
+    width: 100%;
+  }
+
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: left;
+  }
+
+  .card .card-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .card .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 8px; }
+  .card .card-desc { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  .card.green-border { border-color: var(--accent); }
+  .card.red-border { border-color: var(--danger); }
+
+  .vs-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+    width: 100%;
+    margin: 24px 0;
+  }
+
+  .vs-divider {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--text-muted);
+  }
+
+  .commit-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 6px 0;
+    text-align: left;
+  }
+
+  .commit-msg.good {
+    background: rgba(16,185,129,0.1);
+    border-left: 3px solid var(--accent);
+    color: #a7f3d0;
+  }
+
+  .commit-msg.bad {
+    background: rgba(239,68,68,0.1);
+    border-left: 3px solid var(--danger);
+    color: #fca5a5;
+    text-decoration: line-through;
+    text-decoration-color: rgba(239,68,68,0.4);
+  }
+
+  .snapshot-row {
+    display: flex;
+    gap: 32px;
+    margin: 24px 0;
+    justify-content: center;
+  }
+
+  .snapshot {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 170px;
+  }
+
+  .snapshot .snap-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .snapshot .snap-item {
+    font-size: 13px;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .snapshot .snap-item.changed { color: var(--accent); font-weight: 600; }
+
+  .pipeline-stages {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    margin: 32px 0;
+    justify-content: center;
+  }
+
+  .pipeline-stage {
+    padding: 32px 40px;
+    border-radius: 16px;
+    text-align: center;
+    min-width: 180px;
+    position: relative;
+  }
+
+  .pipeline-stage .stage-icon { font-size: 36px; margin-bottom: 10px; display: block; }
+  .pipeline-stage .stage-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 20px; }
+  .pipeline-stage .stage-detail { font-size: 13px; margin-top: 6px; opacity: 0.7; }
+
+  .pipeline-stage.dev { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+  .pipeline-stage.test { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #c4b5fd; }
+  .pipeline-stage.prod { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #a7f3d0; }
+
+  .pipeline-arrow {
+    font-size: 28px;
+    color: var(--text-muted);
+    padding: 0 8px;
+  }
+
+  .checklist {
+    text-align: left;
+    max-width: 600px;
+    margin: 20px auto;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    font-size: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .checklist-item .check {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .two-col-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 40px;
+    text-align: left;
+    margin: 20px 0;
+  }
+
+  .list-item {
+    font-size: 17px;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .list-item .bullet {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* KEYBOARD HINTS */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 100;
+  }
+
+  .nav-hint kbd {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  /* TITLE SLIDE SPECIAL */
+  .title-slide h1 {
+    font-size: 72px;
+    letter-spacing: -2px;
+  }
+
+  .title-slide .phase-number {
+    font-family: 'Sora', sans-serif;
+    font-size: 200px;
+    font-weight: 800;
+    color: var(--accent);
+    opacity: 0.08;
+    position: absolute;
+    right: -20px;
+    bottom: -40px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* ANALOGY CALLOUT */
+  .analogy {
+    background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08));
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    text-align: left;
+    margin: 20px 0;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .analogy .analogy-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .analogy .analogy-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV SIDEBAR -->
+<nav class="nav-sidebar">
+  <div class="nav-logo">
+    <span class="phase-tag">Phase 1</span>
+    <span class="phase-title">GIT Backed Power BI<br>Workspaces</span>
+  </div>
+  <div class="nav-chapter" data-chapter="intro">Welcome</div>
+  <div class="nav-chapter" data-chapter="why-vc">Why Version Control?</div>
+  <div class="nav-chapter" data-chapter="snapshots">The Snapshot Model</div>
+  <div class="nav-chapter" data-chapter="vocabulary">Core Vocabulary</div>
+  <div class="nav-chapter" data-chapter="stored">What Git Stores</div>
+  <div class="nav-chapter" data-chapter="devops">Azure DevOps Navigation</div>
+  <div class="nav-chapter" data-chapter="commit">Connecting & Committing</div>
+  <div class="nav-chapter" data-chapter="messages">Commit Messages</div>
+  <div class="nav-chapter" data-chapter="pipeline">Deployment Pipelines</div>
+  <div class="nav-chapter" data-chapter="habits">Phase 1 Habits</div>
+</nav>
+
+<!-- SLIDE COUNTER -->
+<div class="slide-counter"><span class="current">1</span> / <span class="total">22</span></div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+
+<!-- NAV HINT -->
+<div class="nav-hint"><kbd>←</kbd> <kbd>→</kbd> to navigate</div>
+
+<!-- MAIN STAGE -->
+<div class="stage">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide active" data-chapter="intro">
+    <div class="slide-inner">
+      <span class="tag">Git & CI/CD Training</span>
+      <h1>Phase <span class="accent">1</span></h1>
+      <h2 style="font-weight:300; font-size:36px; color:var(--text-dim);">Foundation</h2>
+      <p class="subtitle" style="margin-top:16px;">GIT Backed Power BI Workspaces: Committing, Syncing and the Main Branch</p>
+      <div style="position:absolute;right:-20px;bottom:-40px;font-family:'Sora';font-size:240px;font-weight:800;color:var(--accent);opacity:0.04;line-height:1;">1</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide" data-chapter="why-vc">
+    <div class="slide-inner">
+      <span class="big-emoji">😰</span>
+      <h2>Sound familiar?</h2>
+      <div class="flow-row" style="margin-top:24px;">
+        <div class="flow-box" style="opacity:0.5"><span class="icon">📄</span><span class="label dim">Sales_v1.pbix</span></div>
+        <div class="flow-box" style="opacity:0.6"><span class="icon">📄</span><span class="label dim">Sales_v2.pbix</span></div>
+        <div class="flow-box" style="opacity:0.7"><span class="icon">📄</span><span class="label dim">Sales_v2_FINAL.pbix</span></div>
+        <div class="flow-box" style="opacity:0.85"><span class="icon">📄</span><span class="label warning">Sales_v2_FINAL_FINAL.pbix</span></div>
+        <div class="flow-box" style="border-color:var(--danger);"><span class="icon">📄</span><span class="label danger">Sales_DONT_DELETE.pbix</span></div>
+      </div>
+      <p class="subtitle" style="margin-top:32px;">Version control ends this chaos — <span class="accent">forever</span>.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Three Reasons -->
+  <div class="slide" data-chapter="why-vc">
+    <div class="slide-inner">
+      <span class="tag">Why version control?</span>
+      <h2>Three superpowers for your BI work</h2>
+      <div class="card-grid cols-3" style="margin-top:16px;">
+        <div class="card">
+          <span class="card-icon">🔍</span>
+          <div class="card-title">Track Everything</div>
+          <div class="card-desc">Who changed what, and when. Full audit trail of every workspace item.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🛡️</span>
+          <div class="card-title">Experiment Safely</div>
+          <div class="card-desc">Try things without fear. You can always go back to any previous state.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🤝</span>
+          <div class="card-title">Collaborate Cleanly</div>
+          <div class="card-desc">Multiple people work simultaneously without overwriting each other.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Snapshot concept -->
+  <div class="slide" data-chapter="snapshots">
+    <div class="slide-inner">
+      <span class="tag">Mental Model</span>
+      <h2>Git stores <span class="accent">snapshots</span>,<br>not differences</h2>
+      <p class="subtitle" style="margin-top:8px;">Each commit captures the <em>complete state</em> of your workspace.</p>
+      <div class="analogy" style="margin-top:32px;">
+        <div class="analogy-label">💡 Think of it like…</div>
+        <div class="analogy-text">Taking a <strong>photo</strong> of your entire desk every time you make a change — not writing down <em>"moved the stapler."</em> You can flip back to any photo and see exactly how everything looked.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Snapshot visual -->
+  <div class="slide" data-chapter="snapshots">
+    <div class="slide-inner">
+      <h3 style="color:var(--text-dim); font-weight:400;">Every commit = a complete picture</h3>
+      <div class="snapshot-row">
+        <div class="snapshot">
+          <div class="snap-title">COMMIT 1</div>
+          <div class="snap-item">📊 Sales Model</div>
+          <div class="snap-item">📈 Report A</div>
+          <div class="snap-item">📈 Report B</div>
+          <div class="snap-item">📁 Pipeline</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:28px;color:var(--text-muted);">→</div>
+        <div class="snapshot">
+          <div class="snap-title">COMMIT 2</div>
+          <div class="snap-item">📊 Sales Model</div>
+          <div class="snap-item changed">📈 Report A ★</div>
+          <div class="snap-item">📈 Report B</div>
+          <div class="snap-item">📁 Pipeline</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:28px;color:var(--text-muted);">→</div>
+        <div class="snapshot">
+          <div class="snap-title">COMMIT 3</div>
+          <div class="snap-item changed">📊 Sales Model ★</div>
+          <div class="snap-item">📈 Report A</div>
+          <div class="snap-item">📈 Report B</div>
+          <div class="snap-item changed">📁 Pipeline ★</div>
+        </div>
+      </div>
+      <p style="font-size:14px; color:var(--text-muted); margin-top:16px;"><span class="accent">★</span> = changed in that commit &nbsp;·&nbsp; Git is smart — it only stores what's different behind the scenes</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Vocabulary - Repo -->
+  <div class="slide" data-chapter="vocabulary">
+    <div class="slide-inner">
+      <span class="tag">Vocabulary</span>
+      <span class="big-emoji">📦</span>
+      <h2>Repository <span class="dim mono" style="font-size:24px;">(repo)</span></h2>
+      <p class="subtitle">The container for all your workspace items and their <span class="accent">complete history</span>.</p>
+      <div class="analogy" style="margin-top:24px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">A filing cabinet that magically remembers every version of every document ever placed inside it.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Vocabulary - Commit -->
+  <div class="slide" data-chapter="vocabulary">
+    <div class="slide-inner">
+      <span class="tag">Vocabulary</span>
+      <span class="big-emoji">📸</span>
+      <h2>Commit</h2>
+      <p class="subtitle">A saved snapshot of your work, with a description of what changed and why.</p>
+      <div class="analogy" style="margin-top:24px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Like "Save As" — but it <strong>stacks</strong> on top of every previous save. You never lose older versions.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Vocabulary - Branch & Sync -->
+  <div class="slide" data-chapter="vocabulary">
+    <div class="slide-inner">
+      <span class="tag">Vocabulary</span>
+      <div class="card-grid cols-2" style="max-width:800px;">
+        <div class="card">
+          <span class="card-icon">🌿</span>
+          <div class="card-title">Branch</div>
+          <div class="card-desc" style="font-size:16px; line-height:1.6;">A parallel line of development. In Phase 1, we use only <strong class="accent">main</strong> — like a single highway everyone drives on.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Sync (Pull / Push)</div>
+          <div class="card-desc" style="font-size:16px; line-height:1.6;"><strong>Pull</strong> = download teammates' changes.<br><strong>Push</strong> = upload your commits.<br>Bidirectional — always pull first!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: What gets stored -->
+  <div class="slide" data-chapter="stored">
+    <div class="slide-inner">
+      <span class="tag">What Git Tracks</span>
+      <h2>Stored vs. <span class="danger">Not Stored</span></h2>
+      <div class="vs-container" style="margin-top:20px;">
+        <div class="card green-border">
+          <div class="card-title accent" style="font-size:18px; margin-bottom:16px;">✅ In Git</div>
+          <div style="font-size:15px; line-height:2; color:var(--text-dim);">
+            Semantic models<br>Reports<br>Notebooks<br>Data pipelines<br><span class="dim" style="font-size:13px;">(stored as JSON / metadata)</span>
+          </div>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="card red-border">
+          <div class="card-title danger" style="font-size:18px; margin-bottom:16px;">❌ Not in Git</div>
+          <div style="font-size:15px; line-height:2; color:var(--text-dim);">
+            Data itself<br>Refresh schedules<br>Workspace settings<br>Connection credentials
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Azure DevOps -->
+  <div class="slide" data-chapter="devops">
+    <div class="slide-inner">
+      <span class="tag">Azure DevOps</span>
+      <span class="big-emoji">🏠</span>
+      <h2>Your new home base</h2>
+      <p class="subtitle">Azure DevOps is where your repository lives.<br>You'll visit it to review history, check branches, and create pull requests.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: DevOps Navigation -->
+  <div class="slide" data-chapter="devops">
+    <div class="slide-inner">
+      <span class="tag">Key areas in Azure DevOps</span>
+      <div class="card-grid cols-3" style="max-width:900px;">
+        <div class="card">
+          <span class="card-icon">📜</span>
+          <div class="card-title">Commit History</div>
+          <div class="card-desc">Repos → Commits<br><br>See who changed what, when, and read their commit messages.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📂</span>
+          <div class="card-title">File Browser</div>
+          <div class="card-desc">Repos → Files<br><br>Explore how Fabric items appear as folders and JSON files in the repo.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔀</span>
+          <div class="card-title">Branches</div>
+          <div class="card-desc">Repos → Branches<br><br>View all branches. In Phase 1, you'll only see <strong>main</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: Fabric Connection -->
+  <div class="slide" data-chapter="commit">
+    <div class="slide-inner">
+      <span class="tag">Fabric ↔ Git</span>
+      <h2>The connection</h2>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:0; margin:32px 0;">
+        <div class="flow-box highlight" style="min-width:300px;">
+          <span class="icon">🖥️</span>
+          <span class="label">Fabric Workspace</span>
+          <span class="detail">Where you build</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; padding:12px 0;">
+          <span style="font-size:24px; color:var(--accent); line-height:1;">↑</span>
+          <span style="font-size:24px; color:var(--accent); line-height:1;">↓</span>
+          <span style="font-size:15px; color:var(--text-dim); margin:6px 0;">syncs with</span>
+          <span style="font-size:24px; color:var(--accent); line-height:1;">↑</span>
+          <span style="font-size:24px; color:var(--accent); line-height:1;">↓</span>
+        </div>
+        <div class="flow-box highlight" style="min-width:300px;">
+          <span class="icon">📦</span>
+          <span class="label">Git Repository</span>
+          <span class="detail">Where history lives</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px;">An admin sets this up once. You'll see "Source Control" in the workspace toolbar.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: Commit workflow -->
+  <div class="slide" data-chapter="commit">
+    <div class="slide-inner">
+      <span class="tag">The commit workflow</span>
+      <h2>Four steps to save your work</h2>
+      <div class="flow-row" style="margin:32px 0;">
+        <div class="flow-box">
+          <span class="icon">✏️</span>
+          <span class="label">1. Make Changes</span>
+          <span class="detail">Edit in Fabric</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">👀</span>
+          <span class="label">2. Review</span>
+          <span class="detail">Source Control panel</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">📝</span>
+          <span class="label">3. Message</span>
+          <span class="detail">Describe your changes</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight">
+          <span class="icon">📸</span>
+          <span class="label">4. Commit</span>
+          <span class="detail">Snapshot saved!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: When to commit -->
+  <div class="slide" data-chapter="commit">
+    <div class="slide-inner">
+      <span class="tag">Commit timing</span>
+      <h2>When should you commit?</h2>
+      <div class="card-grid cols-2" style="max-width:750px; margin-top:20px;">
+        <div class="card green-border">
+          <div class="card-title accent">✅ Commit now</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            Finished a logical piece of work<br>
+            End of day (even if WIP)<br>
+            Before pulling updates
+          </div>
+        </div>
+        <div class="card red-border">
+          <div class="card-title danger">❌ Not ideal</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            After every tiny edit<br>
+            After a full week of changes<br>
+            Mixing unrelated changes together
+          </div>
+        </div>
+      </div>
+      <div class="analogy" style="margin-top:20px; max-width:750px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Committing is like saving a checkpoint in a video game — do it after meaningful progress, not every footstep, but definitely before a boss fight.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: Good commit messages -->
+  <div class="slide" data-chapter="messages">
+    <div class="slide-inner left-align" style="max-width:800px;">
+      <span class="tag">Commit messages</span>
+      <h2>The formula</h2>
+      <div style="font-family:'JetBrains Mono'; font-size:28px; color:var(--accent); margin:16px 0 32px; padding:16px 24px; background:rgba(16,185,129,0.08); border-radius:8px; display:inline-block;">
+        [Action] + [What] + [Where / Why]
+      </div>
+      <div class="commit-msg good">Add YTD calculation to Sales semantic model</div>
+      <div class="commit-msg good">Fix incorrect date filter on Regional Report</div>
+      <div class="commit-msg good">Create drill-through page for Product Analysis</div>
+      <div class="commit-msg good" style="color:#fde68a; border-color:var(--warning);">WIP: Building inventory report — visuals complete</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 16: Bad commit messages -->
+  <div class="slide" data-chapter="messages">
+    <div class="slide-inner left-align" style="max-width:800px;">
+      <span class="tag">Commit messages</span>
+      <h2>What to <span class="danger">avoid</span></h2>
+      <div class="commit-msg bad">updates</div>
+      <div class="commit-msg bad">fixed stuff</div>
+      <div class="commit-msg bad">changes</div>
+      <div class="commit-msg bad">final version</div>
+      <div class="commit-msg bad">asdf</div>
+      <p style="margin-top:24px; color:var(--text-dim); font-size:17px;">Future you will thank present you for being specific. 🙏</p>
+    </div>
+  </div>
+
+  <!-- SLIDE: Pipeline intro -->
+  <div class="slide" data-chapter="pipeline">
+    <div class="slide-inner">
+      <span class="tag">Deployment pipelines</span>
+      <h2>Three environments, one path</h2>
+      <div class="pipeline-stages">
+        <div class="pipeline-stage dev">
+          <span class="stage-icon">🔧</span>
+          <span class="stage-name">Development</span>
+          <span class="stage-detail">Build & experiment</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage test">
+          <span class="stage-icon">🧪</span>
+          <span class="stage-name">Test</span>
+          <span class="stage-detail">Validate & verify</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage prod">
+          <span class="stage-icon">🚀</span>
+          <span class="stage-name">Production</span>
+          <span class="stage-detail">End users see this</span>
+        </div>
+      </div>
+      <div class="analogy" style="margin-top:24px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Like a restaurant kitchen: you <strong>experiment</strong> with a recipe (Dev), have others <strong>taste-test</strong> it (Test), then put it on the <strong>menu</strong> for customers (Prod).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 20: Your role in Phase 1 -->
+  <div class="slide" data-chapter="pipeline">
+    <div class="slide-inner">
+      <span class="tag">Your role in Phase 1</span>
+      <h2>Stay in <span class="blue">Development</span></h2>
+      <div class="card-grid cols-2" style="max-width:750px; margin-top:20px;">
+        <div class="card" style="border-color:rgba(59,130,246,0.3);">
+          <div class="card-title blue">👨‍💻 You (BI Engineer)</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.8;">
+            Work in Dev workspace<br>
+            Commit with clear messages<br>
+            Flag when features are ready
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(139,92,246,0.3);">
+          <div class="card-title purple">👤 Release Manager</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.8;">
+            Triggers deployments<br>
+            Manages Test & Production<br>
+            Controls the pipeline
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 21: Daily habits -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Build the habit</span>
+      <h2>Your daily rhythm</h2>
+      <div class="checklist">
+        <div class="checklist-item"><span class="check">☀️</span><span><strong class="accent">Start of day</strong> — Open workspace, check for updates, pull if any</span></div>
+        <div class="checklist-item"><span class="check">✏️</span><span><strong>Before changes</strong> — Confirm you're in the right workspace</span></div>
+        <div class="checklist-item"><span class="check">📸</span><span><strong>At checkpoints</strong> — Commit after logical progress</span></div>
+        <div class="checklist-item"><span class="check">🌙</span><span><strong class="accent">End of day</strong> — Commit everything, even WIP. Never leave work uncommitted overnight.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 22: Success metric -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Phase 1 Goal</span>
+      <div class="big-number">5</div>
+      <h2 style="margin-top:16px;">independent commits</h2>
+      <p class="subtitle" style="margin-top:12px;">That's your Phase 1 milestone — five commits with clear, descriptive messages, done on your own.</p>
+      <p style="color:var(--text-dim); font-size:15px; margin-top:32px;">
+        Remember: Git is very hard to break. Everything is recoverable.<br>
+        That's the whole point. <span class="accent">Experiment with confidence.</span>
+      </p>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const chapters = document.querySelectorAll('.nav-chapter');
+  const counter = document.querySelector('.slide-counter .current');
+  const total = document.querySelector('.slide-counter .total');
+  const progressFill = document.querySelector('.progress-fill');
+  let currentSlide = 0;
+
+  total.textContent = slides.length;
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    counter.textContent = currentSlide + 1;
+    progressFill.style.width = ((currentSlide + 1) / slides.length * 100) + '%';
+
+    // Update nav
+    const activeChapter = slides[currentSlide].dataset.chapter;
+    chapters.forEach(c => c.classList.toggle('active', c.dataset.chapter === activeChapter));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goTo(currentSlide + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(currentSlide - 1); }
+  });
+
+  chapters.forEach(ch => {
+    ch.addEventListener('click', () => {
+      const target = ch.dataset.chapter;
+      for (let i = 0; i < slides.length; i++) {
+        if (slides[i].dataset.chapter === target) { goTo(i); return; }
+      }
+    });
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>

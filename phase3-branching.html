@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 3: Branching & Collaborative Development</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Karla:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06090f;
+    --bg-card: #0d1321;
+    --bg-nav: #0a0f1a;
+    --accent: #3b82f6;
+    --accent-dim: #1e3a5f;
+    --accent-glow: rgba(59,130,246,0.12);
+    --text: #e8ecf4;
+    --text-dim: #7a8ba8;
+    --text-muted: #3d4f6a;
+    --green: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --purple: #8b5cf6;
+    --teal: #14b8a6;
+    --orange: #f97316;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Karla', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .nav-sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--bg-nav);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    padding: 24px 0; z-index: 100;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .nav-logo { padding: 0 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 16px; }
+  .nav-logo .phase-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .nav-logo .phase-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+
+  .nav-chapter { padding: 10px 24px; font-size: 13px; color: var(--text-dim); cursor: pointer; transition: all 0.2s; border-left: 2px solid transparent; font-weight: 500; }
+  .nav-chapter:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .nav-chapter.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
+
+  .slide-counter { position: fixed; top: 24px; right: 32px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-dim); z-index: 100; background: rgba(6,9,15,0.8); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(10px); }
+  .slide-counter .current { color: var(--accent); font-weight: 700; }
+
+  .progress-bar { position: fixed; bottom: 0; left: 260px; right: 0; height: 3px; background: rgba(255,255,255,0.03); z-index: 100; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #93c5fd); transition: width 0.4s ease; }
+
+  .stage { position: fixed; left: 260px; top: 0; right: 0; bottom: 0; overflow: hidden; }
+
+  .slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 60px 80px; opacity: 0; transform: translateX(40px); transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none; }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+  .slide-inner { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .slide-inner.left-align { align-items: flex-start; text-align: left; }
+
+  h1 { font-family: 'Sora', sans-serif; font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 24px; }
+  h2 { font-family: 'Sora', sans-serif; font-size: 44px; font-weight: 700; line-height: 1.15; letter-spacing: -1px; margin-bottom: 20px; }
+  h3 { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 600; line-height: 1.3; margin-bottom: 16px; }
+
+  .subtitle { font-size: 22px; color: var(--text-dim); line-height: 1.5; max-width: 700px; font-weight: 300; }
+  .accent { color: var(--accent); }
+  .green { color: var(--green); }
+  .danger { color: var(--danger); }
+  .warning { color: var(--warning); }
+  .purple { color: var(--purple); }
+  .teal { color: var(--teal); }
+  .orange { color: var(--orange); }
+  .dim { color: var(--text-dim); }
+
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: block; }
+  .big-number { font-family: 'Sora', sans-serif; font-size: 140px; font-weight: 800; line-height: 1; color: var(--accent); letter-spacing: -5px; }
+  .big-emoji { font-size: 80px; margin-bottom: 20px; display: block; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .flow-row { display: flex; align-items: center; gap: 16px; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
+  .flow-box { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px 28px; text-align: center; min-width: 140px; }
+  .flow-box.highlight { border-color: var(--accent); background: var(--accent-glow); }
+  .flow-box .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .flow-box .label { font-weight: 600; font-size: 15px; }
+  .flow-box .detail { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .flow-arrow { font-size: 24px; color: var(--accent); flex-shrink: 0; }
+
+  .card-grid { display: grid; gap: 16px; margin: 24px 0; width: 100%; }
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 28px; text-align: left; }
+  .card .card-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .card .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 8px; }
+  .card .card-desc { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  .analogy {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08));
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 12px; padding: 24px 28px;
+    text-align: left; margin: 20px 0;
+    width: 100%; max-width: 700px;
+  }
+  .analogy .analogy-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .analogy .analogy-text { font-size: 18px; line-height: 1.6; color: var(--text); }
+
+  .checklist { text-align: left; max-width: 600px; margin: 20px auto; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .checklist-item .check { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+  /* BRANCH VISUAL */
+  .branch-visual {
+    width: 100%;
+    max-width: 850px;
+    margin: 28px 0;
+    position: relative;
+  }
+
+  .branch-lane {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 16px 0;
+    position: relative;
+  }
+
+  .branch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    width: 100px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 16px;
+  }
+
+  .branch-line {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .branch-line .commit-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 2px solid var(--bg);
+  }
+
+  .branch-line .commit-label {
+    position: absolute;
+    top: -28px;
+    font-size: 11px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+  }
+
+  .merge-line {
+    position: absolute;
+    border: 2px dashed var(--text-muted);
+    border-radius: 0 0 0 12px;
+  }
+
+  /* LIFECYCLE STEPS */
+  .lifecycle {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin: 24px 0;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .lifecycle-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding: 0 8px;
+  }
+
+  .lifecycle-step::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 24px;
+    font-size: 20px;
+    color: var(--text-muted);
+  }
+
+  .lifecycle-step:last-child::after { display: none; }
+
+  .lifecycle-num {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    margin: 0 auto 12px;
+  }
+
+  .lifecycle-label {
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .lifecycle-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* PR SECTION */
+  .pr-form {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: left;
+    width: 100%;
+    max-width: 700px;
+    margin: 20px 0;
+  }
+
+  .pr-field {
+    margin-bottom: 20px;
+  }
+
+  .pr-field label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .pr-field .pr-value {
+    font-size: 16px;
+    color: var(--text);
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+  }
+
+  .pr-field .pr-value.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+
+  /* CONFLICT VISUAL */
+  .conflict-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .ct-node {
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 200px;
+  }
+
+  .ct-node.question {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #fde68a;
+    border-radius: 50px;
+  }
+
+  .ct-node.action {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .ct-node.success {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #a7f3d0;
+  }
+
+  .ct-node.escalate {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: #fca5a5;
+  }
+
+  .ct-arrow {
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+
+  .ct-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .nav-hint { position: fixed; bottom: 16px; right: 32px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); z-index: 100; }
+  .nav-hint kbd { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 8px; font-size: 11px; }
+
+  .naming-example {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    padding: 14px 24px;
+    border-radius: 8px;
+    margin: 6px 0;
+    text-align: left;
+    background: rgba(59,130,246,0.08);
+    border-left: 3px solid var(--accent);
+    color: #93c5fd;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-logo">
+    <span class="phase-tag">Phase 3</span>
+    <span class="phase-title">Branching &<br>Collaborative Dev</span>
+  </div>
+  <div class="nav-chapter" data-chapter="intro">Welcome</div>
+  <div class="nav-chapter" data-chapter="why-branch">Why Branches?</div>
+  <div class="nav-chapter" data-chapter="mental-model">Branch Mental Model</div>
+  <div class="nav-chapter" data-chapter="lifecycle">Feature Branch Lifecycle</div>
+  <div class="nav-chapter" data-chapter="workspace">Feature Workspaces</div>
+  <div class="nav-chapter" data-chapter="daily">Syncing & Daily Workflow</div>
+  <div class="nav-chapter" data-chapter="pr">Pull Requests</div>
+  <div class="nav-chapter" data-chapter="review">The Review Process</div>
+  <div class="nav-chapter" data-chapter="conflicts">Handling Conflicts</div>
+  <div class="nav-chapter" data-chapter="habits">Phase 3 Habits</div>
+</nav>
+
+<div class="slide-counter"><span class="current">1</span> / <span class="total">25</span></div>
+<div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+<div class="nav-hint"><kbd>←</kbd> <kbd>→</kbd> to navigate</div>
+
+<div class="stage">
+
+  <!-- 1: Title -->
+  <div class="slide active" data-chapter="intro">
+    <div class="slide-inner">
+      <span class="tag">Git & CI/CD Training</span>
+      <h1>Phase <span class="accent">3</span></h1>
+      <h2 style="font-weight:300; font-size:36px; color:var(--text-dim);">Branching & Collaborative Development</h2>
+      <p class="subtitle" style="margin-top:16px;">Parallel workstreams, pull requests, and professional workflows</p>
+      <div style="position:absolute;right:-20px;bottom:-40px;font-family:'Sora';font-size:240px;font-weight:800;color:var(--accent);opacity:0.04;line-height:1;">3</div>
+    </div>
+  </div>
+
+  <!-- 2: Recap -->
+  <div class="slide" data-chapter="intro">
+    <div class="slide-inner">
+      <span class="tag">So far</span>
+      <h2>You've mastered two phases</h2>
+      <div class="flow-row" style="margin-top:20px;">
+        <div class="flow-box" style="border-color:rgba(16,185,129,0.3);"><span class="icon">📸</span><span class="label green">Phase 1</span><span class="detail">Commit & Sync</span></div>
+        <div class="flow-arrow dim">✓</div>
+        <div class="flow-box" style="border-color:rgba(139,92,246,0.3);"><span class="icon">🚀</span><span class="label purple">Phase 2</span><span class="detail">Deploy Pipeline</span></div>
+        <div class="flow-arrow dim">✓</div>
+        <div class="flow-box highlight"><span class="icon">🌿</span><span class="label">Phase 3</span><span class="detail">Branching</span></div>
+      </div>
+      <p class="subtitle" style="margin-top:24px;">This is the biggest conceptual leap. Take your time — it's worth it.</p>
+    </div>
+  </div>
+
+  <!-- 3: Why branches -->
+  <div class="slide" data-chapter="why-branch">
+    <div class="slide-inner">
+      <span class="tag">The Problem</span>
+      <h2>Everyone on one road</h2>
+      <p class="subtitle">In Phase 1, you all commit directly to <strong class="green">main</strong>. That works with a small team, but as work grows…</p>
+      <div class="card-grid cols-3" style="margin-top:24px; max-width:850px;">
+        <div class="card" style="border-color:rgba(239,68,68,0.2);">
+          <span class="card-icon">💥</span>
+          <div class="card-title danger">Collisions</div>
+          <div class="card-desc">Two people editing the same model simultaneously</div>
+        </div>
+        <div class="card" style="border-color:rgba(245,158,11,0.2);">
+          <span class="card-icon">🚧</span>
+          <div class="card-title warning">Half-done work</div>
+          <div class="card-desc">Your WIP commits mix with production-ready changes</div>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,0.2);">
+          <span class="card-icon">🙈</span>
+          <div class="card-title danger">No review</div>
+          <div class="card-desc">Changes go straight to main without a second pair of eyes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4: Branches solve this -->
+  <div class="slide" data-chapter="why-branch">
+    <div class="slide-inner">
+      <span class="tag">The solution</span>
+      <h2>Branches = <span class="accent">private lanes</span></h2>
+      <div class="card-grid cols-3" style="margin-top:16px; max-width:850px;">
+        <div class="card" style="border-color:rgba(59,130,246,0.3);">
+          <span class="card-icon">🛣️</span>
+          <div class="card-title accent">Isolation</div>
+          <div class="card-desc">Work on your feature without affecting anyone else's work</div>
+        </div>
+        <div class="card" style="border-color:rgba(59,130,246,0.3);">
+          <span class="card-icon">🧪</span>
+          <div class="card-title accent">Safe experimentation</div>
+          <div class="card-desc">If it doesn't work out, just delete the branch. Main is untouched.</div>
+        </div>
+        <div class="card" style="border-color:rgba(59,130,246,0.3);">
+          <span class="card-icon">👀</span>
+          <div class="card-title accent">Review gate</div>
+          <div class="card-desc">Changes must be reviewed and approved before reaching main</div>
+        </div>
+      </div>
+      <div class="analogy" style="margin-top:16px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Think of <strong>main</strong> as the published version of a book. Branches are <strong>draft copies</strong> where different editors work on different chapters — they only merge back into the book after editing and approval.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5: Mental model -->
+  <div class="slide" data-chapter="mental-model">
+    <div class="slide-inner">
+      <span class="tag">Mental model</span>
+      <h2>Main = the <span class="green">blessed</span> version</h2>
+      <div class="card-grid cols-2" style="max-width:750px; margin-top:20px;">
+        <div class="card" style="border-color:rgba(16,185,129,0.3);">
+          <div class="card-title" style="font-size:20px;">🌳 <span class="green">main</span></div>
+          <div class="card-desc" style="font-size:16px; line-height:1.8; margin-top:12px;">
+            The official, tested, approved version<br>
+            Syncs to the Development workspace<br>
+            Only receives reviewed changes
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(59,130,246,0.3);">
+          <div class="card-title" style="font-size:20px;">🌿 <span class="accent">feature branch</span></div>
+          <div class="card-desc" style="font-size:16px; line-height:1.8; margin-top:12px;">
+            Your personal copy to work in<br>
+            Syncs to a Feature workspace<br>
+            You're free to experiment here
+          </div>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); margin-top:24px; font-size:16px;">Branches share history until they diverge — like a road that forks, then merges back.</p>
+    </div>
+  </div>
+
+  <!-- 6: Visual branches -->
+  <div class="slide" data-chapter="mental-model">
+    <div class="slide-inner">
+      <span class="tag">Visualizing branches</span>
+      <h3 style="color:var(--text-dim); font-weight:400;">Two lanes, one destination</h3>
+      <div class="branch-visual">
+        <!-- Main lane -->
+        <div class="branch-lane">
+          <div class="branch-label green">main</div>
+          <div class="branch-line" style="background: linear-gradient(90deg, var(--green), var(--green));">
+            <div class="commit-dot" style="background:var(--green); left:5%;"><div class="commit-label">v1.0</div></div>
+            <div class="commit-dot" style="background:var(--green); left:25%;"><div class="commit-label">Bug fix</div></div>
+            <div class="commit-dot" style="background:var(--green); left:55%;"><div class="commit-label">Hotfix</div></div>
+            <div class="commit-dot" style="background:var(--green); left:82%;"><div class="commit-label" style="color:var(--accent);">PR Merged ✓</div></div>
+            <div class="commit-dot" style="background:var(--green); left:95%;"></div>
+          </div>
+        </div>
+        <!-- Feature lane -->
+        <div class="branch-lane" style="padding-left:0;">
+          <div class="branch-label accent">feature</div>
+          <div class="branch-line" style="background: linear-gradient(90deg, transparent 20%, var(--accent) 20%, var(--accent) 80%, transparent 80%); opacity: 0.8;">
+            <div class="commit-dot" style="background:var(--accent); left:30%;"><div class="commit-label">Add measures</div></div>
+            <div class="commit-dot" style="background:var(--accent); left:50%;"><div class="commit-label">Build visuals</div></div>
+            <div class="commit-dot" style="background:var(--accent); left:70%;"><div class="commit-label">Add filters</div></div>
+          </div>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:14px;">The feature branch splits off from main, you work independently, then it merges back when approved.</p>
+    </div>
+  </div>
+
+  <!-- 7: Lifecycle overview -->
+  <div class="slide" data-chapter="lifecycle">
+    <div class="slide-inner">
+      <span class="tag">Feature branch lifecycle</span>
+      <h2>Five steps, start to finish</h2>
+      <div class="lifecycle">
+        <div class="lifecycle-step">
+          <div class="lifecycle-num" style="background:rgba(59,130,246,0.2); color:var(--accent);">1</div>
+          <div class="lifecycle-label">Create</div>
+          <div class="lifecycle-desc">Branch from main</div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-num" style="background:rgba(139,92,246,0.2); color:var(--purple);">2</div>
+          <div class="lifecycle-label">Work</div>
+          <div class="lifecycle-desc">Build in your Feature Workspace</div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-num" style="background:rgba(245,158,11,0.2); color:var(--warning);">3</div>
+          <div class="lifecycle-label">Commit</div>
+          <div class="lifecycle-desc">Save progress to your branch</div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-num" style="background:rgba(16,185,129,0.2); color:var(--green);">4</div>
+          <div class="lifecycle-label">PR</div>
+          <div class="lifecycle-desc">Request review & approval</div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-num" style="background:rgba(16,185,129,0.3); color:var(--green);">5</div>
+          <div class="lifecycle-label">Merge</div>
+          <div class="lifecycle-desc">Changes join main</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8: Feature Workspace -->
+  <div class="slide" data-chapter="workspace">
+    <div class="slide-inner">
+      <span class="tag">Feature workspaces</span>
+      <h2>Your personal <span class="accent">sandbox</span></h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box" style="border-color:rgba(59,130,246,0.3);">
+          <span class="icon">🌿</span>
+          <span class="label accent">Feature Branch</span>
+          <span class="detail">Your code changes</span>
+        </div>
+        <div class="flow-arrow">⟷</div>
+        <div class="flow-box highlight">
+          <span class="icon">🖥️</span>
+          <span class="label">Feature Workspace</span>
+          <span class="detail">Your Fabric sandbox</span>
+        </div>
+      </div>
+      <p class="subtitle">Each feature branch connects to a dedicated workspace.<br>Experiment freely — nothing here affects main or the Dev workspace.</p>
+    </div>
+  </div>
+
+  <!-- 9: Naming conventions -->
+  <div class="slide" data-chapter="workspace">
+    <div class="slide-inner left-align" style="max-width:700px;">
+      <span class="tag">Naming conventions</span>
+      <h2>Branch names that make sense</h2>
+      <div style="margin:20px 0;">
+        <div class="naming-example">feature/sales-ytd-calculations</div>
+        <div class="naming-example">feature/jsmith-inventory-report</div>
+        <div class="naming-example">bugfix/date-filter-issue</div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px; margin-top:16px; line-height:1.6;">
+        Workspace name follows the same pattern:<br>
+        <span class="mono accent" style="font-size:15px;">Feature-SalesReporting-JSmith</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- 10: Working in feature workspace -->
+  <div class="slide" data-chapter="workspace">
+    <div class="slide-inner">
+      <span class="tag">Working in your feature workspace</span>
+      <h2>Your new daily flow</h2>
+      <div class="card-grid cols-3" style="max-width:850px; margin-top:16px;">
+        <div class="card">
+          <span class="card-icon">🧪</span>
+          <div class="card-title">Experiment freely</div>
+          <div class="card-desc">This is your sandbox. Try things. Break things. It's safe here.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📸</span>
+          <div class="card-title">Commit often</div>
+          <div class="card-desc">Even WIP is fine on a feature branch. Commit early and often.</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Stay current</div>
+          <div class="card-desc">Periodically sync with main to avoid big conflicts later.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Syncing fundamentals -->
+  <div class="slide" data-chapter="daily">
+    <div class="slide-inner">
+      <span class="tag">Staying in sync</span>
+      <h2>Always <span class="accent">pull</span> before you <span class="green">push</span></h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box">
+          <span class="icon">⬇️</span>
+          <span class="label">1. Pull Updates</span>
+          <span class="detail">Get latest changes</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">✏️</span>
+          <span class="label">2. Do Your Work</span>
+          <span class="detail">Build, edit, create</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">📸</span>
+          <span class="label">3. Commit</span>
+          <span class="detail">Save a snapshot</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight">
+          <span class="icon">⬆️</span>
+          <span class="label">4. Push</span>
+          <span class="detail">Share with team</span>
+        </div>
+      </div>
+      <div class="analogy">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Check your mailbox <em>before</em> sending your letter. You might have important context from teammates that affects your work.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Both changed scenario -->
+  <div class="slide" data-chapter="daily">
+    <div class="slide-inner">
+      <span class="tag">Common scenario</span>
+      <h2>You have changes <span class="warning">&</span> the branch has changes</h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box" style="border-color:var(--warning);">
+          <span class="icon">⚠️</span>
+          <span class="label">Both Changed</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">📸</span>
+          <span class="label">Commit yours first</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">⬇️</span>
+          <span class="label">Then pull updates</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight">
+          <span class="icon">✅</span>
+          <span class="label">All synced!</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px;">Or, if your changes were experimental, you can discard them and pull the branch version.</p>
+    </div>
+  </div>
+
+  <!-- 11: Daily workflow decision -->
+  <div class="slide" data-chapter="daily">
+    <div class="slide-inner">
+      <span class="tag">Daily rhythm</span>
+      <h2>Start → Work → Commit → Repeat</h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box">
+          <span class="icon">☀️</span>
+          <span class="label">Start</span>
+          <span class="detail">Sync with branch</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">✅</span>
+          <span class="label">Confirm</span>
+          <span class="detail">Right workspace?</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">✏️</span>
+          <span class="label">Build</span>
+          <span class="detail">Do your work</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">📸</span>
+          <span class="label">Commit</span>
+          <span class="detail">At checkpoints</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">🌙</span>
+          <span class="label">End</span>
+          <span class="detail">Commit all WIP</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:15px;">⚠️ <strong>Always verify</strong> you're in your feature workspace, not the Dev workspace!</p>
+    </div>
+  </div>
+
+  <!-- 12: When ready to merge -->
+  <div class="slide" data-chapter="daily">
+    <div class="slide-inner">
+      <span class="tag">Feature complete</span>
+      <h2>Ready to merge? ✅ Checklist</h2>
+      <div class="checklist" style="max-width:650px;">
+        <div class="checklist-item"><span class="check">✅</span><span>Feature tested in your workspace</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>All changes committed (nothing pending)</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Commit messages are clear and professional</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Synced with latest main (no surprises)</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Create a Pull Request →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13: What is a PR -->
+  <div class="slide" data-chapter="pr">
+    <div class="slide-inner">
+      <span class="tag">Pull requests</span>
+      <span class="big-emoji">🔀</span>
+      <h2>What is a Pull Request?</h2>
+      <p class="subtitle">A <strong>formal request</strong> to merge your branch into main.<br>It's the <span class="accent">review gate</span> — no changes reach main without approval.</p>
+      <div class="analogy" style="margin-top:24px;">
+        <div class="analogy-label">💡 Analogy</div>
+        <div class="analogy-text">Like submitting a draft article to an editor. You're saying <em>"I believe this is ready — please review before we publish."</em></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14: Creating a PR -->
+  <div class="slide" data-chapter="pr">
+    <div class="slide-inner">
+      <span class="tag">Creating a PR in Azure DevOps</span>
+      <div class="pr-form">
+        <div class="pr-field">
+          <label>Source branch</label>
+          <div class="pr-value mono" style="color:#93c5fd;">feature/sales-ytd-calculations</div>
+        </div>
+        <div class="pr-field">
+          <label>Target branch</label>
+          <div class="pr-value mono" style="color:#a7f3d0;">main</div>
+        </div>
+        <div class="pr-field">
+          <label>Title</label>
+          <div class="pr-value">Add YTD and QTD calculations to Sales model</div>
+        </div>
+        <div class="pr-field">
+          <label>Reviewers</label>
+          <div class="pr-value" style="color:var(--text-dim);">👤 Lead · 👤 Peer · 👤 Release Manager</div>
+        </div>
+        <div class="pr-field" style="margin-bottom:0;">
+          <label>Description</label>
+          <div class="pr-value" style="font-size:14px; color:var(--text-dim); line-height:1.6;">Summary of changes, testing done, notes for reviewer…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15: PR description template -->
+  <div class="slide" data-chapter="pr">
+    <div class="slide-inner left-align" style="max-width:700px;">
+      <span class="tag">PR description template</span>
+      <h3>What to include</h3>
+      <div class="card-grid cols-2" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-title accent">📝 Summary</div>
+          <div class="card-desc" style="font-size:14px;">What does this change accomplish?</div>
+        </div>
+        <div class="card">
+          <div class="card-title accent">📋 Changes Made</div>
+          <div class="card-desc" style="font-size:14px;">List the specific items added/modified</div>
+        </div>
+        <div class="card">
+          <div class="card-title accent">🧪 Testing Done</div>
+          <div class="card-desc" style="font-size:14px;">How did you verify this works?</div>
+        </div>
+        <div class="card">
+          <div class="card-title accent">⚠️ Notes for Reviewer</div>
+          <div class="card-desc" style="font-size:14px;">Anything they should pay special attention to</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 16: Review process -->
+  <div class="slide" data-chapter="review">
+    <div class="slide-inner">
+      <span class="tag">The review process</span>
+      <h2>What reviewers look for</h2>
+      <div class="card-grid cols-4" style="margin-top:16px;">
+        <div class="card" style="padding:20px;">
+          <span class="card-icon">✅</span>
+          <div class="card-title" style="font-size:14px;">Meets requirements</div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <span class="card-icon">🐛</span>
+          <div class="card-title" style="font-size:14px;">No obvious errors</div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <span class="card-icon">📏</span>
+          <div class="card-title" style="font-size:14px;">Naming conventions</div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <span class="card-icon">📖</span>
+          <div class="card-title" style="font-size:14px;">Documentation</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17: Responding to feedback -->
+  <div class="slide" data-chapter="review">
+    <div class="slide-inner">
+      <span class="tag">Responding to feedback</span>
+      <h2>The feedback loop</h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box">
+          <span class="icon">💬</span>
+          <span class="label">Feedback</span>
+          <span class="detail">Reviewer comments</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">🔧</span>
+          <span class="label">Fix</span>
+          <span class="detail">In your workspace</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">📸</span>
+          <span class="label">Commit</span>
+          <span class="detail">Push the fix</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight">
+          <span class="icon">✅</span>
+          <span class="label">Reply</span>
+          <span class="detail">"Done"</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px;">New commits automatically appear in the PR. Respond to all feedback within 24 hours.</p>
+    </div>
+  </div>
+
+  <!-- 18: PR etiquette -->
+  <div class="slide" data-chapter="review">
+    <div class="slide-inner">
+      <span class="tag">PR etiquette</span>
+      <div class="card-grid cols-2" style="max-width:750px;">
+        <div class="card" style="border-color:rgba(16,185,129,0.3);">
+          <div class="card-title green">✅ Do</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            Keep scope focused (one feature per PR)<br>
+            Respond to feedback promptly<br>
+            Be open to suggestions<br>
+            Review others' PRs too
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,0.3);">
+          <div class="card-title danger">❌ Don't</div>
+          <div class="card-desc" style="font-size:15px; line-height:2;">
+            Bundle dozens of unrelated changes<br>
+            Ignore reviewer comments<br>
+            Merge without required approvals<br>
+            Take feedback personally
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 19: After merge -->
+  <div class="slide" data-chapter="review">
+    <div class="slide-inner">
+      <span class="tag">After the merge</span>
+      <h2>What happens next</h2>
+      <div class="flow-row" style="margin:28px 0;">
+        <div class="flow-box" style="border-color:rgba(16,185,129,0.3);">
+          <span class="icon">✅</span>
+          <span class="label green">PR Approved</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">🔀</span>
+          <span class="label">Merged to Main</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">🖥️</span>
+          <span class="label">Syncs to Dev</span>
+          <span class="detail">Workspace</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <span class="icon">🗑️</span>
+          <span class="label dim">Delete branch</span>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:16px;">Your feature workspace may be deleted or recycled. The normal deployment pipeline takes over from here.</p>
+    </div>
+  </div>
+
+  <!-- 20: Why conflicts -->
+  <div class="slide" data-chapter="conflicts">
+    <div class="slide-inner">
+      <span class="tag">Merge conflicts</span>
+      <span class="big-emoji">⚡</span>
+      <h2>When two people edit the <span class="warning">same item</span></h2>
+      <p class="subtitle">Conflicts happen when Git can't automatically combine changes. They're rare with BI artifacts — but you should know what to do.</p>
+    </div>
+  </div>
+
+  <!-- 21: Prevention -->
+  <div class="slide" data-chapter="conflicts">
+    <div class="slide-inner">
+      <span class="tag">Prevention first</span>
+      <h2>Avoiding conflicts</h2>
+      <div class="card-grid cols-3" style="max-width:850px; margin-top:16px;">
+        <div class="card" style="border-color:rgba(16,185,129,0.3);">
+          <span class="card-icon">🗣️</span>
+          <div class="card-title">Communicate</div>
+          <div class="card-desc">Tell teammates what you're working on. Coordinate who owns which items.</div>
+        </div>
+        <div class="card" style="border-color:rgba(16,185,129,0.3);">
+          <span class="card-icon">⏱️</span>
+          <div class="card-title">Keep branches short</div>
+          <div class="card-desc">The longer a branch lives, the more likely conflicts. Merge frequently.</div>
+        </div>
+        <div class="card" style="border-color:rgba(16,185,129,0.3);">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Sync with main</div>
+          <div class="card-desc">Pull updates from main regularly. Small, frequent syncs beat one big merge.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 22: Resolution flow -->
+  <div class="slide" data-chapter="conflicts">
+    <div class="slide-inner">
+      <span class="tag">When conflicts happen</span>
+      <h2>Resolution decision tree</h2>
+      <div class="conflict-tree">
+        <div class="ct-node question">⚡ Conflict detected</div>
+        <div class="ct-arrow">↓</div>
+        <div class="ct-node action">🔍 Identify which items conflict</div>
+        <div class="ct-arrow">↓</div>
+        <div class="ct-node action">🗣️ Talk to the other contributor</div>
+        <div class="ct-arrow">↓</div>
+        <div class="ct-row">
+          <div class="ct-node success">Keep mine</div>
+          <div class="ct-node success">Keep theirs</div>
+          <div class="ct-node success">Combine manually</div>
+          <div class="ct-node escalate">Unsure? Escalate</div>
+        </div>
+        <div class="ct-arrow">↓</div>
+        <div class="ct-node" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#a7f3d0;">📸 Commit the resolution</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 23: 15-minute rule -->
+  <div class="slide" data-chapter="conflicts">
+    <div class="slide-inner">
+      <span class="tag">Rule of thumb</span>
+      <div class="big-number" style="font-size:120px;">15</div>
+      <h2 style="margin-top:8px;">minute rule</h2>
+      <p class="subtitle" style="margin-top:16px;">
+        If you've spent more than 15 minutes stuck on a conflict,<br>
+        <strong class="accent">escalate to your lead</strong>. That's what they're there for.
+      </p>
+    </div>
+  </div>
+
+  <!-- 24: Phase 3 goals -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Phase 3 Goals</span>
+      <h2>You'll know you've made it when…</h2>
+      <div class="checklist" style="max-width:700px;">
+        <div class="checklist-item"><span class="check">🌿</span><span>You independently create and work in <strong class="accent">feature branches</strong></span></div>
+        <div class="checklist-item"><span class="check">🔀</span><span>Your PRs include clear descriptions and <strong class="accent">pass review</strong> efficiently</span></div>
+        <div class="checklist-item"><span class="check">👀</span><span>You <strong class="accent">review others'</strong> PRs and leave constructive comments</span></div>
+        <div class="checklist-item"><span class="check">⚡</span><span>Conflicts are rare and handled <strong class="accent">without disruption</strong></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 25: Closing -->
+  <div class="slide" data-chapter="habits">
+    <div class="slide-inner">
+      <span class="tag">Congratulations</span>
+      <span class="big-emoji">🎉</span>
+      <h2>You're a <span class="accent">Git-powered</span> BI Engineer</h2>
+      <div class="flow-row" style="margin-top:32px;">
+        <div class="flow-box" style="border-color:rgba(16,185,129,0.3);">
+          <span class="label green" style="font-size:13px;">Phase 1</span>
+          <span class="detail">Commit & Sync</span>
+        </div>
+        <div class="flow-arrow dim">+</div>
+        <div class="flow-box" style="border-color:rgba(139,92,246,0.3);">
+          <span class="label purple" style="font-size:13px;">Phase 2</span>
+          <span class="detail">Deploy Pipeline</span>
+        </div>
+        <div class="flow-arrow dim">+</div>
+        <div class="flow-box" style="border-color:rgba(59,130,246,0.3);">
+          <span class="label accent" style="font-size:13px;">Phase 3</span>
+          <span class="detail">Branch & PR</span>
+        </div>
+        <div class="flow-arrow dim">=</div>
+        <div class="flow-box highlight" style="background:rgba(59,130,246,0.1);">
+          <span class="label" style="font-size:14px;">Professional<br>CI/CD Workflow</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const chapters = document.querySelectorAll('.nav-chapter');
+  const counter = document.querySelector('.slide-counter .current');
+  const total = document.querySelector('.slide-counter .total');
+  const progressFill = document.querySelector('.progress-fill');
+  let currentSlide = 0;
+  total.textContent = slides.length;
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    counter.textContent = currentSlide + 1;
+    progressFill.style.width = ((currentSlide + 1) / slides.length * 100) + '%';
+    const activeChapter = slides[currentSlide].dataset.chapter;
+    chapters.forEach(c => c.classList.toggle('active', c.dataset.chapter === activeChapter));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goTo(currentSlide + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(currentSlide - 1); }
+  });
+
+  chapters.forEach(ch => {
+    ch.addEventListener('click', () => {
+      const target = ch.dataset.chapter;
+      for (let i = 0; i < slides.length; i++) {
+        if (slides[i].dataset.chapter === target) { goTo(i); return; }
+      }
+    });
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>
