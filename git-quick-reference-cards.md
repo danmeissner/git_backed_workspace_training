@@ -41,13 +41,13 @@
 
 **Step 2: Review Your Changes**
 - Items with changes show a status indicator
-- Click on an item to see what's different (the "diff")
-- Verify these are the changes you intended
+- Determine which changes are yours vs other developer changes
 
 **Step 3: Select Items to Commit**
 - Check the boxes next to items you want to include
 - Group related changes together (one feature = one commit)
 - Don't mix unrelated changes in a single commit
+- Don't commit other developers' work
 
 **Step 4: Write Your Commit Message**
 - Be specific about WHAT changed and WHY
@@ -125,7 +125,7 @@
 ### 🚀 Starting a New Feature
 
 ```
-☐ Confirm you've been assigned a feature workspace
+☐ Navigate to your personal feature workspace
 ☐ Verify it's connected to your feature branch (not Main!)
 ☐ Sync/Update to get the latest from your branch
 ☐ Confirm: What is the goal of this feature?
