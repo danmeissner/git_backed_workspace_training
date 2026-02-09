@@ -1,7 +1,3 @@
-# Quick Reference Cards: Git & CI/CD for BI Engineers
-
----
-
 ## Card 1: Git Vocabulary Cheat Sheet
 
 | Term | What It Means | BI Analogy |
@@ -20,6 +16,8 @@
 
 ### Key Insight
 > **Git stores snapshots, not differences.** Each commit captures the complete state of everything. Git is just smart about not duplicating unchanged items.
+
+<div style="page-break-after: always;"></div>
 
 ---
 
@@ -66,6 +64,8 @@
 | Every tiny edit | ❌ Too frequent |
 | After a week of changes | ❌ Too infrequent—commit sooner! |
 | Before pulling updates from others | ✅ Yes—save your work first |
+
+<div style="page-break-after: always;"></div>
 
 ---
 
@@ -117,6 +117,8 @@
 2. **No period at the end**: Commit messages are titles, not sentences
 3. **Keep it under 50 characters** if possible (for readability in logs)
 4. **If you need more detail**: First line = summary, blank line, then longer explanation
+
+<div style="page-break-after: always;"></div>
 
 ---
 
@@ -175,6 +177,8 @@ Follow your team's standard. Common patterns:
 - `feature/sales-ytd-calculations`
 - `feature/jsmith-inventory-report`
 - `bugfix/date-filter-issue`
+
+<div style="page-break-after: always;"></div>
 
 ---
 
@@ -252,6 +256,8 @@ Brief description of what this PR accomplishes.
 - Ignore reviewer comments
 - Merge without required approvals
 
+<div style="page-break-after: always;"></div>
+
 ---
 
 ## Card 6: Troubleshooting Common Issues
@@ -312,7 +318,7 @@ Brief description of what this PR accomplishes.
 - Create a new commit that reverses the changes
 - Or ask admin to help revert
 - Don't try to "delete history"—Git doesn't work that way
-
+<div style="page-break-after: always;"></div>
 ---
 
 ## Card 7: Daily & Weekly Habits
@@ -361,6 +367,8 @@ Brief description of what this PR accomplishes.
 ☐ Retrospective: what's working, what's confusing?
 ☐ Share learnings with teammates
 ```
+
+<div style="page-break-after: always;"></div>
 
 ---
 
