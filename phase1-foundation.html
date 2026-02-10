@@ -677,10 +677,14 @@
           <div class="card-title">Branch</div>
           <div class="card-desc" style="font-size:16px; line-height:1.6;">A parallel line of development. In Phase 1, we use only <strong class="accent">main</strong> — like a single highway everyone drives on.</div>
         </div>
-        <div class="card">
+        <div class="card" style="position:relative; border-style:dashed;">
           <span class="card-icon">🔄</span>
           <div class="card-title">Sync (Pull / Push)</div>
           <div class="card-desc" style="font-size:16px; line-height:1.6;"><strong>Pull</strong> = download teammates' changes.<br><strong>Push</strong> = upload your commits.<br>Bidirectional — always pull first!</div>
+          <div style="position:absolute; top:12px; right:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; width:48px; background:rgba(139,92,246,0.15); border: 2px solid rgba(139,92,246,0.3); border-radius:8px; padding:6px 4px; font-size:20px;">
+            <div style="font-size:16px;">⏭️</div>
+            <div style="font-size:10px; font-weight:600; color:rgba(139,92,246,0.6); margin-top:2px;">Phase 2</div>
+          </div>
         </div>
       </div>
     </div>
@@ -702,10 +706,11 @@
         <div class="card red-border">
           <div class="card-title danger" style="font-size:18px; margin-bottom:16px;">❌ Not in Git</div>
           <div style="font-size:15px; line-height:2; color:var(--text-dim);">
-            Data itself<br>Refresh schedules<br>Workspace settings<br>Connection credentials
+            Data itself<br>Refresh schedules<br>Workspace settings<br>Connection credentials<br>Dashboards*<br>Metric Set*
           </div>
         </div>
       </div>
+      <p style="font-size:13px; color:var(--text-dim); margin-top:16px;"><span style="font-size:11px; color:var(--text-muted);">*</span> <a href="https://learn.microsoft.com/en-us/fabric/cicd/git-integration/intro-to-git-integration?source=recommendations&tabs=azure-devops#supported-items" target="_blank" style="color:var(--link-color); text-decoration:none; border-bottom:1px solid var(--link-color);">See Microsoft documentation for complete list of supported items</a></p>
     </div>
   </div>
 
@@ -877,7 +882,7 @@
         <div class="pipeline-arrow">→</div>
         <div class="pipeline-stage test">
           <span class="stage-icon">🧪</span>
-          <span class="stage-name">Test</span>
+          <span class="stage-name">UAT</span>
           <span class="stage-detail">Validate & verify</span>
         </div>
         <div class="pipeline-arrow">→</div>
@@ -889,7 +894,7 @@
       </div>
       <div class="analogy" style="margin-top:24px;">
         <div class="analogy-label">💡 Analogy</div>
-        <div class="analogy-text">Like a restaurant kitchen: you <strong>experiment</strong> with a recipe (Dev), have others <strong>taste-test</strong> it (Test), then put it on the <strong>menu</strong> for customers (Prod).</div>
+        <div class="analogy-text">Like a restaurant kitchen: you <strong>experiment</strong> with a recipe (Dev), have others <strong>taste-test</strong> it (UAT), then put it on the <strong>menu</strong> for customers (Prod).</div>
       </div>
     </div>
   </div>
@@ -912,7 +917,7 @@
           <div class="card-title purple">👤 Release Manager</div>
           <div class="card-desc" style="font-size:15px; line-height:1.8;">
             Triggers deployments<br>
-            Manages Test & Production<br>
+            Manages UAT & Production<br>
             Controls the pipeline
           </div>
         </div>

@@ -421,7 +421,7 @@
         <div class="pipeline-arrow">→</div>
         <div class="pipeline-stage test">
           <span class="stage-icon">🧪</span>
-          <span class="stage-name">Test</span>
+          <span class="stage-name">UAT</span>
           <span class="stage-detail">Validation</span>
           <span class="stage-extra">Business users verify,<br>real-ish data</span>
         </div>
@@ -451,7 +451,7 @@
         <div class="card">
           <span class="card-icon">🔗</span>
           <div class="card-title">Items are paired</div>
-          <div class="card-desc">Sales Report in Dev is linked to Sales Report in Test. Updates flow through this pairing.</div>
+          <div class="card-desc">Sales Report in Dev is linked to Sales Report in UAT. Updates flow through this pairing.</div>
         </div>
         <div class="card">
           <span class="card-icon">⚙️</span>
@@ -528,11 +528,11 @@
       <p class="subtitle" style="margin-bottom:24px;">Deployment rules automatically swap environment-specific settings.</p>
       <table class="env-table">
         <thead>
-          <tr><th>Setting</th><th style="color:#93c5fd;">🔧 Dev</th><th style="color:#c4b5fd;">🧪 Test</th><th style="color:#a7f3d0;">🚀 Prod</th></tr>
+          <tr><th>Setting</th><th style="color:#93c5fd;">🔧 Dev</th><th style="color:#c4b5fd;">🧪 UAT</th><th style="color:#a7f3d0;">🚀 Prod</th></tr>
         </thead>
         <tbody>
-          <tr><td>Server</td><td style="color:#93c5fd;">dev-sql.company.com</td><td style="color:#c4b5fd;">test-sql.company.com</td><td style="color:#a7f3d0;">prod-sql.company.com</td></tr>
-          <tr><td>Database</td><td style="color:#93c5fd;">SalesDB_Dev</td><td style="color:#c4b5fd;">SalesDB_Test</td><td style="color:#a7f3d0;">SalesDB_Prod</td></tr>
+          <tr><td>Server</td><td style="color:#93c5fd;">dev-sql.company.com</td><td style="color:#c4b5fd;">uat-sql.company.com</td><td style="color:#a7f3d0;">prod-sql.company.com</td></tr>
+          <tr><td>Database</td><td style="color:#93c5fd;">SalesDB_Dev</td><td style="color:#c4b5fd;">SalesDB_UAT</td><td style="color:#a7f3d0;">SalesDB_Prod</td></tr>
           <tr><td>Data</td><td style="color:#93c5fd;">Sample data</td><td style="color:#c4b5fd;">Copy of prod</td><td style="color:#a7f3d0;">Real data</td></tr>
         </tbody>
       </table>
@@ -605,7 +605,7 @@
         <div class="card">
           <span class="card-icon">⏮️</span>
           <div class="card-title">Reverse deploy</div>
-          <div class="card-desc" style="font-size:15px; line-height:1.6;">In some cases, deploy backward — copy the working Production version back to Test while you investigate.</div>
+          <div class="card-desc" style="font-size:15px; line-height:1.6;">In some cases, deploy backward — copy the working Production version back to UAT while you investigate.<br><span style="font-size:13px; color:var(--text-muted); margin-top:8px; display:block;">* only when previous workspace is empty</span></div>
         </div>
       </div>
       <div class="analogy" style="margin-top:20px;">
@@ -642,7 +642,7 @@
         <div class="loop-connector"></div>
         <div class="loop-step" style="border-color: rgba(139,92,246,0.3);">
           <span class="step-icon">🚀</span>
-          <span class="step-label accent">Deploy to Test</span>
+          <span class="step-label accent">Deploy to UAT</span>
         </div>
         <div class="loop-connector"></div>
         <div class="loop-step" style="border-color: rgba(245,158,11,0.3);">
@@ -759,6 +759,7 @@
         <div class="checklist-item"><span class="check">✅</span><span>Parameters used (no hardcoded connections)</span></div>
         <div class="checklist-item"><span class="check">✅</span><span>Tested in Dev workspace thoroughly</span></div>
         <div class="checklist-item"><span class="check">✅</span><span>Release Manager notified it's ready</span></div>
+        <div class="checklist-item"><span class="check">✅</span><span>Deployment meeting scheduled</span></div>
         <div class="checklist-item"><span class="check">✅</span><span>Business users aware testing will be needed</span></div>
       </div>
     </div>
@@ -776,7 +777,7 @@
         <div class="flow-arrow">→</div>
         <div class="flow-box"><span class="icon">📸</span><span class="label">Commit</span></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-box"><span class="icon">📢</span><span class="label">Signal Ready</span></div>
+        <div class="flow-box"><span class="icon">👀</span><span class="label">Request Peer Review</span></div>
         <div class="flow-arrow">→</div>
         <div class="flow-box"><span class="icon">🧪</span><span class="label">Test</span></div>
         <div class="flow-arrow">→</div>
